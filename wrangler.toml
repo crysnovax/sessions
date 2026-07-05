@@ -4,7 +4,7 @@ compatibility_date = "2026-04-13"
 
 [[kv_namespaces]]
 binding = "SESSION_KV"
-id = "2daac608a9a24cee9f40f550fd4cede3"  # ← Replace with your KV namespace ID after creating it
+id = "0c09aa87b0694f7e8553a49e0d7e5c47"  # ← Replace with your KV namespace ID after creating it
 
 # Optional: Add environment variables
 [vars]
