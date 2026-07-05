@@ -1,0 +1,19 @@
+{
+  "name": "id",
+  "version": "1.0.0",
+  "description": "CRYSNOVA Session Storage API on Cloudflare Workers",
+  "main": "worker.js",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "kv:create": "wrangler kv:namespace create SESSION_KV",
+    "kv:list": "wrangler kv:namespace list"
+  },
+  "keywords": ["cloudflare", "worker", "kv", "session", "whatsapp"],
+  "author": "crysnovax",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^4.81.1"
+  }
+}
