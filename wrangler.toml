@@ -12,4 +12,4 @@ ADMIN_KEY = "x"  # Change this to a strong password
 
 # Uncomment if using custom domain
 # [routes]
-# pattern = "api.crysnova.link/session/*"
+# pattern = "api.crysnova.qzz.io/session/*"
