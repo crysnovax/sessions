@@ -1,19 +1,27 @@
 {
-  "name": "id",
+  "name": "cdn",
   "version": "1.0.0",
-  "description": "CRYSNOVA Session Storage API on Cloudflare Workers",
-  "main": "worker.js",
-  "type": "module",
+  "description": "CDN for Crysnova - File storage and sharing with R2",
+  "main": "index.js",
   "scripts": {
-    "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "kv:create": "wrangler kv:namespace create SESSION_KV",
-    "kv:list": "wrangler kv:namespace list"
+    "dev": "wrangler dev",
+    "start": "wrangler dev",
+    "publish": "wrangler publish",
+    "tail": "wrangler tail",
+    "logs": "wrangler tail",
+    "list": "wrangler r2 bucket list-files cody"
   },
-  "keywords": ["cloudflare", "worker", "kv", "session", "whatsapp"],
-  "author": "crysnovax",
+  "keywords": [
+    "cdn",
+    "cloudflare",
+    "r2",
+    "worker",
+    "file-storage"
+  ],
+  "author": "Crysnova",
   "license": "MIT",
   "devDependencies": {
-    "wrangler": "^4.81.1"
+    "wrangler": "^3.114.17"
   }
 }
