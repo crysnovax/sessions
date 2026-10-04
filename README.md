@@ -38,6 +38,13 @@ curl -X POST https://id.crysnova.qzz.io/session/save \
 { "success": true, "sessionId": "CODY_AI!KV:mru3webc", "shortId": "mru3webc" }
 ```
 
+`sessionData` must be a CODY auth bundle with `version: 1` and a `files`
+object containing `creds.json` plus at least one
+`app-state-sync-key-*.json` file. Credentials-only JSON is rejected with HTTP
+422 because it cannot perform app-state operations such as clearing a chat or
+updating the profile name. The exporter must upload the complete `sessions/`
+directory, not only `creds.json`.
+
 ### Load
 
 ```sh

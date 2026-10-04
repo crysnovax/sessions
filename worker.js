@@ -57,6 +57,52 @@ async function readJsonBody(request) {
   }
 }
 
+// CODY's multi-file auth state must travel as a bundle. A creds-only payload
+// can authenticate the account but cannot sign app-state mutations such as
+// chatModify() or updateProfileName(). Reject it here instead of storing a
+// session that will fail later with "App state key not present".
+export function validateSessionData(sessionData) {
+  let payload = sessionData;
+  if (typeof payload === 'string') {
+    const encoded = payload.trim();
+    try {
+      if (encoded.startsWith('CODY_AI!') && !encoded.startsWith('CODY_AI!KV:')) {
+        const base64 = encoded.slice('CODY_AI!'.length);
+        const binary = atob(base64);
+        const bytes = Uint8Array.from(binary, character => character.charCodeAt(0));
+        payload = JSON.parse(new TextDecoder().decode(bytes));
+      } else {
+        payload = JSON.parse(encoded);
+      }
+    } catch {
+      throw new Error('sessionData must be valid raw JSON or a CODY_AI base64 auth bundle');
+    }
+  }
+
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('sessionData must be a JSON object or JSON string');
+  }
+
+  if (payload.version === 1 && payload.files && typeof payload.files === 'object') {
+    const files = Object.keys(payload.files);
+    const hasCreds = files.includes('creds.json');
+    const appStateKeys = files.filter(file => file.startsWith('app-state-sync-key-') && file.endsWith('.json'));
+    if (!hasCreds) throw new Error('session bundle must include creds.json');
+    if (appStateKeys.length === 0) {
+      throw new Error('session bundle must include at least one app-state-sync-key-*.json file');
+    }
+    return JSON.stringify(payload);
+  }
+
+  // The Worker cannot reconstruct encrypted app-state keys omitted by an old
+  // exporter, so reject the old credentials-only format at upload time.
+  if (payload.noiseKey && payload.me) {
+    throw new Error('credentials-only sessions are not supported; export the complete sessions folder including app-state-sync-key-*.json files');
+  }
+
+  throw new Error('unsupported session format; expected auth bundle version 1');
+}
+
 // Matches `/session/load/:id` plus its legacy alias `/load/:id`, returning the raw
 // id segment, or null when neither prefix matched.
 function matchIdRoute(path, prefixes) {
@@ -77,6 +123,7 @@ async function handleSaveSession(env, phone, sessionData) {
   }
 
   try {
+    const validatedSessionData = validateSessionData(sessionData);
     const shortId = generateShortId();
 
     // Deterministic key: the shortId on its own locates the record, so loading is
@@ -84,7 +131,7 @@ async function handleSaveSession(env, phone, sessionData) {
     // consistent and could miss the new key for up to 60 seconds).
     await env.SESSION_KV.put(sessionKey(shortId), JSON.stringify({
       phone: phone,
-      data: sessionData,
+      data: validatedSessionData,
       createdAt: Date.now(),
       shortId: shortId
     }));
@@ -95,7 +142,8 @@ async function handleSaveSession(env, phone, sessionData) {
       shortId: shortId
     });
   } catch (err) {
-    return jsonResponse({ error: err.message }, 500);
+    const status = /session|app-state|credentials-only/i.test(err.message) ? 422 : 500;
+    return jsonResponse({ error: err.message }, status);
   }
 }
 
